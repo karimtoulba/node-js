@@ -1,6 +1,18 @@
 const express = require("express");
+const article = require("./models/articles");
 
 const app = express();
+
+// Connect to MongoDB
+const mongoose = require("mongoose");
+mongoose
+  .connect("mongodb+srv://nodeUser:nodePassword@pets-adoption.lu7j6.mongodb.net/nodeDatabase?retryWrites=true&w=majority&appName=pets-adoption")
+  .then(function () {
+    console.log("Connected Successfully");
+  })
+  .catch(function (error) {
+    console.log("Unable to Connect", error);
+  });
 
 // Use JSON
 app.use(express.json());
@@ -49,6 +61,46 @@ app.get("/ejs", function (req, res) {
   res.render("file.ejs", {
     name: req.query.name,
     age: req.query.age,
+  });
+});
+
+// Endpoint for posting articles to Database
+app.post("/article", async function (req, res) {
+  const newArticle = new article();
+
+  newArticle.name = "Hello World";
+  newArticle.description = "Lorem Ipsum paragraph for testing";
+  newArticle.number = 83;
+  await newArticle.save();
+
+  res.send("Article has been saved successfully!");
+});
+
+// Endpoint for reading articles from Database
+app.get("/article", async function (req, res) {
+  const articles = await article.find();
+  res.json(articles);
+});
+
+//Endpoint for reading one article by ID from Database
+app.get("/article/:id", async function (req, res) {
+  const theid = req.params.id;
+  const articles = await article.findById(theid);
+  res.json(articles);
+});
+
+// Endpoint for deleting one article by ID from Database
+app.delete("/article/:id", async function (req, res) {
+  const theid = req.params.id;
+  await article.findByIdAndDelete(theid);
+  res.send(`Article ${theid} has been deleted successfully!`);
+});
+
+// Endpoint for showing articles using EJS file
+app.get("/all-articles", async function (req, res) {
+  const allArticles = await article.find();
+  res.render("all-articles.ejs", {
+    articlesHTML: allArticles,
   });
 });
 
